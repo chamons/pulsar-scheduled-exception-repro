@@ -109,6 +109,10 @@ services:
       - managedLedgerDefaultEnsembleSize=2
       - managedLedgerDefaultWriteQuorum=2
       - managedLedgerDefaultAckQuorum=2
+      # Lower tick time = timer fires more often = more calls to updateTimer/nextDeliveryTime
+      - delayedDeliveryTickTimeMillis=100
+      # Force frequent ledger rollovers to increase churn
+      - managedLedgerMaxEntriesPerLedger=5000
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -136,6 +140,10 @@ services:
       - managedLedgerDefaultEnsembleSize=2
       - managedLedgerDefaultWriteQuorum=2
       - managedLedgerDefaultAckQuorum=2
+      # Lower tick time = timer fires more often = more calls to updateTimer/nextDeliveryTime
+      - delayedDeliveryTickTimeMillis=100
+      # Force frequent ledger rollovers to increase churn
+      - managedLedgerMaxEntriesPerLedger=5000
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -163,6 +171,10 @@ services:
       - managedLedgerDefaultEnsembleSize=2
       - managedLedgerDefaultWriteQuorum=2
       - managedLedgerDefaultAckQuorum=2
+      # Lower tick time = timer fires more often = more calls to updateTimer/nextDeliveryTime
+      - delayedDeliveryTickTimeMillis=100
+      # Force frequent ledger rollovers to increase churn
+      - managedLedgerMaxEntriesPerLedger=5000
     depends_on:
       zookeeper:
         condition: service_healthy
