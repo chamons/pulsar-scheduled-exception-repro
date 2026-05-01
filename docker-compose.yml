@@ -14,11 +14,6 @@ services:
       - "9080:9080"
     cap_add:
       - NET_ADMIN
-  redis:
-    image: redis:6.2.6
-    command: redis-server
-    ports:
-      - 6379:6379
   zookeeper:
     image: apachepulsar/pulsar:4.1.2
     restart: on-failure
@@ -52,7 +47,8 @@ services:
       # otherwise every time we run docker compose up or down we fail to start due to Cookie
       # See: https://github.com/apache/bookkeeper/blob/405e72acf42bb1104296447ea8840d805094c787/bookkeeper-server/src/main/java/org/apache/bookkeeper/bookie/Cookie.java#L57-68
       - advertisedAddress=bookie-1
-      - BOOKIE_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+      - BOOKIE_MEM=-Xms1G -Xmx1G -XX:MaxDirectMemorySize=2G
+      - BOOKIE_GC=-XX:+UseG1GC -XX:MaxGCPauseMillis=10 -XX:+ExitOnOutOfMemoryError -XX:+PerfDisableSharedMem
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -69,7 +65,8 @@ services:
       # otherwise every time we run docker compose up or down we fail to start due to Cookie
       # See: https://github.com/apache/bookkeeper/blob/405e72acf42bb1104296447ea8840d805094c787/bookkeeper-server/src/main/java/org/apache/bookkeeper/bookie/Cookie.java#L57-68
       - advertisedAddress=bookie-2
-      - BOOKIE_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+      - BOOKIE_MEM=-Xms1G -Xmx1G -XX:MaxDirectMemorySize=2G
+      - BOOKIE_GC=-XX:+UseG1GC -XX:MaxGCPauseMillis=10 -XX:+ExitOnOutOfMemoryError -XX:+PerfDisableSharedMem
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -86,7 +83,8 @@ services:
       # otherwise every time we run docker compose up or down we fail to start due to Cookie
       # See: https://github.com/apache/bookkeeper/blob/405e72acf42bb1104296447ea8840d805094c787/bookkeeper-server/src/main/java/org/apache/bookkeeper/bookie/Cookie.java#L57-68
       - advertisedAddress=bookie-3
-      - BOOKIE_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+      - BOOKIE_MEM=-Xms1G -Xmx1G -XX:MaxDirectMemorySize=2G
+      - BOOKIE_GC=-XX:+UseG1GC -XX:MaxGCPauseMillis=10 -XX:+ExitOnOutOfMemoryError -XX:+PerfDisableSharedMem
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -105,10 +103,14 @@ services:
       - advertisedAddress=broker-1
       - advertisedListeners=external:pulsar://broker-1:6650
       - brokerDeleteInactiveTopicsEnabled=false
-      - PULSAR_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+      - PULSAR_MEM=-Xms1G -Xmx1G -XX:MaxDirectMemorySize=2G
       - managedLedgerDefaultEnsembleSize=2
       - managedLedgerDefaultWriteQuorum=2
       - managedLedgerDefaultAckQuorum=2
+      # Lower tick time = timer fires more often = more calls to updateTimer/nextDeliveryTime
+      - delayedDeliveryTickTimeMillis=100
+      # Force frequent ledger rollovers to increase churn
+      - managedLedgerMaxEntriesPerLedger=5000
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -132,10 +134,14 @@ services:
       - advertisedAddress=broker-2
       - advertisedListeners=external:pulsar://broker-2:6650
       - brokerDeleteInactiveTopicsEnabled=false
-      - PULSAR_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+      - PULSAR_MEM=-Xms1G -Xmx1G -XX:MaxDirectMemorySize=2G
       - managedLedgerDefaultEnsembleSize=2
       - managedLedgerDefaultWriteQuorum=2
       - managedLedgerDefaultAckQuorum=2
+      # Lower tick time = timer fires more often = more calls to updateTimer/nextDeliveryTime
+      - delayedDeliveryTickTimeMillis=100
+      # Force frequent ledger rollovers to increase churn
+      - managedLedgerMaxEntriesPerLedger=5000
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -159,10 +165,14 @@ services:
       - advertisedAddress=broker-3
       - advertisedListeners=external:pulsar://broker-3:6650
       - brokerDeleteInactiveTopicsEnabled=false
-      - PULSAR_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+      - PULSAR_MEM=-Xms1G -Xmx1G -XX:MaxDirectMemorySize=2G
       - managedLedgerDefaultEnsembleSize=2
       - managedLedgerDefaultWriteQuorum=2
       - managedLedgerDefaultAckQuorum=2
+      # Lower tick time = timer fires more often = more calls to updateTimer/nextDeliveryTime
+      - delayedDeliveryTickTimeMillis=100
+      # Force frequent ledger rollovers to increase churn
+      - managedLedgerMaxEntriesPerLedger=5000
     depends_on:
       zookeeper:
         condition: service_healthy
