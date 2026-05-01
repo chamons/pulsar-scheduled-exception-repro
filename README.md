@@ -22,3 +22,7 @@ broker-1-1  | java.util.NoSuchElementException: null
 broker-3-1  | java.util.NoSuchElementException: null
 broker-3-1  | java.util.NoSuchElementException: null
 ```
+
+# Notes
+
+This repro seems to be very hardware dependent, an M1 Max was unable to trigger it while M3 and M4 were able to trigger it 100% of the time.
