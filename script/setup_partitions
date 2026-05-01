@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -e
+
+pulsar-admin --admin-url=http://broker:8080 tenants create example
+pulsar-admin --admin-url=http://broker:8080 namespaces create example/delivery
+
+pulsar-admin --admin-url=http://broker:8080 topics create-partitioned-topic persistent://example/delivery/notifications-enterprise-retries --partitions 3

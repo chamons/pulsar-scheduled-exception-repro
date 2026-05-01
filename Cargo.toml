@@ -1,0 +1,24 @@
+[package]
+name = "pulsar-scheduled-exception-repro"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.45", features = [
+    "macros",
+    "rt-multi-thread",
+    "signal",
+    "net",
+    "time",
+] }
+bb8 = "0.8.5"
+bb8-redis = "0.16.0"
+redis = "0.26"
+futures = "0.3.31"
+uuid = { version = "1.3.0", features = ["v4"] }
+
+pulsar = { version = "6.7.2", features = [
+    "compression",
+    "tokio-runtime",
+], default-features = false }
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
