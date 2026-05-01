@@ -8,7 +8,7 @@ use bb8_redis::RedisConnectionManager;
 use futures::{StreamExt, stream::FuturesUnordered, task::SpawnExt};
 use pulsar::{
     Consumer, ConsumerOptions, ProducerOptions, Pulsar, SerializeMessage, SubType, TokioExecutor,
-    compression::CompressionSnappy, consumer::InitialPosition,
+    compression::CompressionSnappy, consumer::InitialPosition, error::ProducerError,
 };
 use redis::AsyncCommands;
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
@@ -47,19 +47,6 @@ async fn run_consumer() {
 
     let mut count: usize = 0;
     while let Some(Ok(msg)) = consumer.next().await {
-        // let message = match msg.deserialize() {
-        //     Ok(data) => data,
-        //     Err(e) => {
-        //         println!("could not deserialize message: {e:?}");
-        //         break;
-        //     }
-        // };
-
-        // let app_id = message.split_once(":").unwrap().0.to_string();
-
-        // let mut connection = redis.get().await.unwrap();
-        // let _: () = connection.incr(app_id, 1).await.unwrap();
-
         consumer.ack(&msg).await.unwrap();
         count += 1;
         if count % 10000 == 0 {
@@ -70,7 +57,7 @@ async fn run_consumer() {
 
 const WORKER_COUNT: u64 = 50;
 const PAUSE_BETWEEN_REDIS_CHECKS: u64 = 250;
-const SEND_COUNT: u64 = 500;
+const SEND_COUNT: u64 = 300;
 
 async fn run_producer() {
     let redis = get_redis().await;
@@ -90,24 +77,6 @@ async fn run_producer() {
 }
 
 async fn spam_deliveries(pool: Pool<RedisConnectionManager>) {
-    let last_send = Arc::new(std::sync::Mutex::new(SystemTime::now()));
-
-    {
-        let last_send = last_send.clone();
-        tokio::task::spawn(async move {
-            loop {
-                let duration = *last_send.lock().unwrap();
-                let delta = SystemTime::now()
-                    .duration_since(duration)
-                    .unwrap_or_default();
-                if delta > Duration::from_secs(10) {
-                    println!("Possible stuck producer: {:?}", delta);
-                }
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
-        });
-    };
-
     let pulsar = get_pulsar().await;
 
     let mut producer = pulsar
@@ -124,6 +93,7 @@ async fn spam_deliveries(pool: Pool<RedisConnectionManager>) {
     loop {
         let app_id = uuid::Uuid::new_v4();
 
+        let sending = FuturesUnordered::new();
         for _ in 0..SEND_COUNT {
             loop {
                 let notification_id = uuid::Uuid::new_v4();
@@ -139,6 +109,15 @@ async fn spam_deliveries(pool: Pool<RedisConnectionManager>) {
                     .await
                 {
                     Ok(send_future) => send_future,
+                    Err(pulsar::Error::Producer(e))
+                        if matches!(
+                            e,
+                            ProducerError::Connection(pulsar::error::ConnectionError::SlowDown)
+                        ) =>
+                    {
+                        tokio::time::sleep(Duration::from_secs(3)).await;
+                        continue;
+                    }
                     Err(e) => {
                         println!(
                             "Error sending delivery non_blocking ({e:?}). Trying again in a second"
@@ -148,42 +127,14 @@ async fn spam_deliveries(pool: Pool<RedisConnectionManager>) {
                     }
                 };
 
-                match send_future.await {
-                    Ok(_) => {
-                        *last_send.lock().unwrap() = SystemTime::now();
-                        break;
-                    }
-                    Err(e) => {
-                        println!(
-                            "Error sending delivery (await confirm) ({e:?}). Trying again in a second"
-                        );
-                        tokio::time::sleep(Duration::from_secs(1)).await;
-                        continue;
-                    }
-                }
+                sending.push(send_future);
             }
         }
-
-        // let mut connection = pool.get().await.unwrap();
-        // let mut missed_count = 0;
-        // loop {
-        //     tokio::time::sleep(Duration::from_millis(PAUSE_BETWEEN_REDIS_CHECKS)).await;
-        //     let count = connection
-        //         .get::<String, u64>(app_id.to_string())
-        //         .await
-        //         .unwrap_or_default();
-
-        //     if count >= SEND_COUNT {
-        //         break;
-        //     } else {
-        //         if missed_count > 5 {
-        //             println!(
-        //                 "Expected {SEND_COUNT} found {count} on {app_id} (Count {missed_count})"
-        //             );
-        //         }
-        //         missed_count += 1;
-        //     }
-        // }
+        for send in sending.collect::<Vec<_>>().await {
+            if let Err(e) = send {
+                println!("Error sending delivery non_blocking ({e:?})");
+            }
+        }
     }
 }
 
