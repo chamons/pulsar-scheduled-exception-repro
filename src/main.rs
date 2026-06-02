@@ -26,7 +26,7 @@ async fn run_consumer() {
 
     let mut consumer: Consumer<String, TokioExecutor> = pulsar
         .consumer()
-        .with_topics(&vec![TOPIC])
+        .with_topics(TOPICS)
         .with_consumer_name("delivery-consumer")
         .with_subscription_type(SubType::Shared)
         .with_subscription("delivery-subscription")
@@ -161,6 +161,43 @@ impl SerializeMessage for TestMessage {
 }
 
 const TOPIC: &str = "persistent://example/delivery/notifications-enterprise-retries";
+const TOPIC_2: &str = "persistent://example/delivery/notifications-enterprise";
+const TOPIC_3: &str = "persistent://example/delivery/notifications";
+
+const TOPICS: &[&str] = &[
+    "persistent://example/delivery/notifications-enterprise-retries",
+    "persistent://example/delivery/notifications-enterprise-3",
+    "persistent://example/delivery/notifications-enterprise-2",
+    "persistent://example/delivery/notifications-enterprise",
+    "persistent://example/delivery/notifications",
+    "persistent://example/delivery/notifications-2",
+    "persistent://example/delivery/notifications-3",
+    "persistent://example/delivery/notifications-retries",
+    "persistent://example/delivery/a-notifications-enterprise-retries",
+    "persistent://example/delivery/a-notifications-enterprise-3",
+    "persistent://example/delivery/a-notifications-enterprise-2",
+    "persistent://example/delivery/a-notifications-enterprise",
+    "persistent://example/delivery/a-notifications",
+    "persistent://example/delivery/a-notifications-2",
+    "persistent://example/delivery/a-notifications-3",
+    "persistent://example/delivery/a-notifications-retries",
+    "persistent://example/delivery/b-notifications-enterprise-retries",
+    "persistent://example/delivery/b-notifications-enterprise-3",
+    "persistent://example/delivery/b-notifications-enterprise-2",
+    "persistent://example/delivery/b-notifications-enterprise",
+    "persistent://example/delivery/b-notifications",
+    "persistent://example/delivery/b-notifications-2",
+    "persistent://example/delivery/b-notifications-3",
+    "persistent://example/delivery/b-notifications-retries",
+    "persistent://example/delivery/c-notifications-enterprise-retries",
+    "persistent://example/delivery/c-notifications-enterprise-3",
+    "persistent://example/delivery/c-notifications-enterprise-2",
+    "persistent://example/delivery/c-notifications-enterprise",
+    "persistent://example/delivery/c-notifications",
+    "persistent://example/delivery/c-notifications-2",
+    "persistent://example/delivery/c-notifications-3",
+    "persistent://example/delivery/c-notifications-retries",
+];
 
 async fn get_pulsar() -> Pulsar<TokioExecutor> {
     Pulsar::builder("pulsar://broker:6650", TokioExecutor)

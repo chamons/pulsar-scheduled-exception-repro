@@ -15,7 +15,7 @@ services:
     cap_add:
       - NET_ADMIN
   zookeeper:
-    image: apachepulsar/pulsar:4.1.2
+    image: sha256:b9b47435618aad676e3ab816c782d66d83d5fa05c2fe550ebad4130e1e4ef2d0
     restart: on-failure
     environment:
       - metadataStoreUrl=zk:zookeeper:2181
@@ -30,7 +30,7 @@ services:
       timeout: 5s
       retries: 30
   pulsar-init:
-    image: apachepulsar/pulsar:4.1.2
+    image: sha256:b9b47435618aad676e3ab816c782d66d83d5fa05c2fe550ebad4130e1e4ef2d0
     entrypoint: ["/bin/bash", "/script/init_cluster"]
     volumes:
       - ./script:/script
@@ -38,7 +38,7 @@ services:
       zookeeper:
         condition: service_healthy
   bookie-1:
-    image: apachepulsar/pulsar:4.1.2
+    image: sha256:b9b47435618aad676e3ab816c782d66d83d5fa05c2fe550ebad4130e1e4ef2d0
     restart: on-failure
     environment:
       - clusterName=cluster-a
@@ -56,7 +56,7 @@ services:
         condition: service_completed_successfully
     command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
   bookie-2:
-    image: apachepulsar/pulsar:4.1.2
+    image: sha256:b9b47435618aad676e3ab816c782d66d83d5fa05c2fe550ebad4130e1e4ef2d0
     restart: on-failure
     environment:
       - clusterName=cluster-a
@@ -74,7 +74,7 @@ services:
         condition: service_completed_successfully
     command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
   bookie-3:
-    image: apachepulsar/pulsar:4.1.2
+    image: sha256:b9b47435618aad676e3ab816c782d66d83d5fa05c2fe550ebad4130e1e4ef2d0
     restart: on-failure
     environment:
       - clusterName=cluster-a
@@ -93,7 +93,7 @@ services:
     command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
 
   broker-1:
-    image: apachepulsar/pulsar:4.1.2
+    image: sha256:b9b47435618aad676e3ab816c782d66d83d5fa05c2fe550ebad4130e1e4ef2d0
     hostname: broker
     restart: on-failure
     environment:
@@ -124,7 +124,7 @@ services:
     command: bash -c "bin/apply-config-from-env.py conf/broker.conf && exec bin/pulsar broker"
 
   broker-2:
-    image: apachepulsar/pulsar:4.1.2
+    image: sha256:b9b47435618aad676e3ab816c782d66d83d5fa05c2fe550ebad4130e1e4ef2d0
     hostname: broker
     restart: on-failure
     environment:
@@ -155,7 +155,7 @@ services:
     command: bash -c "bin/apply-config-from-env.py conf/broker.conf && exec bin/pulsar broker"
 
   broker-3:
-    image: apachepulsar/pulsar:4.1.2
+    image: sha256:b9b47435618aad676e3ab816c782d66d83d5fa05c2fe550ebad4130e1e4ef2d0
     hostname: broker
     restart: on-failure
     environment:
@@ -184,7 +184,6 @@ services:
       - "6652:6650"
       - "8082:8080"
     command: bash -c "bin/apply-config-from-env.py conf/broker.conf && exec bin/pulsar broker"
-
 
 volumes:
   target:
